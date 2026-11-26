@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#6f4e37">
+  <title>Café Mobile</title>
+  <style>
+    :root {
+      --cafe: #6f4e37;
+      --cafe-escuro: #4a3324;
+      --destaque: #e8a15a;
+      --fundo: #faf5ef;
+      --card: #ffffff;
+      --texto: #2b1d14;
+      --suave: #7a6a5e;
+      --borda: #eadfd2;
+      --sombra: 0 4px 18px rgba(74, 51, 36, .09);
+    }
+    /* Modo escuro automático */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --cafe: #c69468;
+        --cafe-escuro: #a97a52;
+        --fundo: #17110d;
+        --card: #231a14;
+        --texto: #f5ebe0;
+        --suave: #b3a496;
+        --borda: #382b22;
+        --sombra: 0 4px 18px rgba(0, 0, 0, .35);
+      }
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--fundo);
+      color: var(--texto);
+      padding-bottom: calc(76px + env(safe-area-inset-bottom));
+    }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ===== CABEÇALHO ===== */
+    header {
+      position: sticky; top: 0; z-index: 20;
+      background: color-mix(in srgb, var(--fundo) 88%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--borda);
+    }
+    .topo {
+      max-width: 1100px; margin: 0 auto;
+      padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.2rem; }
+    .logo span {
+      width: 38px; height: 38px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--cafe), var(--destaque));
+      display: grid; place-items: center; font-size: 1.2rem;
+    }
+
+    /* Navegação: barra inferior no celular, abas no topo no PC */
+    nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      display: flex;
+      background: var(--card);
+      border-top: 1px solid var(--borda);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    nav button {
+      flex: 1; border: none; background: none; color: var(--suave);
+      padding: 10px 0 12px; font-size: .75rem;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+    nav button .ico { font-size: 1.35rem; position: relative; }
+    nav button.ativo { color: var(--cafe); font-weight: 700; }
+    #badge {
+      position: absolute; top: -4px; right: -12px;
+      background: #d64545; color: #fff; border-radius: 10px;
+      font-size: .68rem; padding: 1px 6px; font-weight: 700;
+    }
+
+    .area-busca { max-width: 1100px; margin: 0 auto; padding: 0 16px 12px; }
+    #busca {
+      width: 100%; padding: 13px 18px; font-size: 1rem;
+      border: 1px solid var(--borda); border-radius: 28px;
+      background: var(--card); color: var(--texto); outline: none;
+    }
+    #busca:focus { border-color: var(--cafe); box-shadow: 0 0 0 3px color-mix(in srgb, var(--cafe) 25%, transparent); }
+
+    /* ===== CONTEÚDO ===== */
+    main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+    .tela { display: none; }
+    .tela.ativa { display: block; }
+    h2 { margin: 4px 0 4px; font-size: 1.5rem; }
+    .sub { margin: 0 0 16px; color: var(--suave); font-size: .92rem; }
+
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 14px; scrollbar-width: none; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: none; padding: 9px 16px; border-radius: 22px;
+      border: 1px solid var(--borda); background: var(--card); color: var(--texto);
+      font-size: .9rem;
+    }
+    .chip.ativo { background: var(--cafe); border-color: var(--cafe); color: #fff; font-weight: 600; }
+    @media (prefers-color-scheme: dark) { .chip.ativo { color: #1b120c; } }
+
+    .grade { display: grid; gap: 14px; grid-template-columns: repeat(2, 1fr); }
+    .produto {
+      background: var(--card); border: 1px solid var(--borda);
+      border-radius: 18px; overflow: hidden; box-shadow: var(--sombra);
+      display: flex; flex-direction: column;
+      transition: transform .15s;
+    }
+    .produto:hover { transform: translateY(-3px); }
+    .produto .img {
+      height: 112px; display: grid; place-items: center;
+      font-size: 3.4rem; position: relative;
+    }
+    .tag {
+      position: absolute; top: 8px; left: 8px;
+      background: rgba(255, 255, 255, .92); color: #4a3324;
+      font-size: .68rem; font-weight: 700; padding: 3px 9px; border-radius: 10px;
+    }
+    .produto .info { padding: 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .produto h3 { margin: 0; font-size: 1rem; }
+    .produto p { margin: 0; font-size: .8rem; color: var(--suave); flex: 1; }
+    .produto .rodape { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+    .preco { font-weight: 800; color: var(--cafe); }
+    .btn-add {
+      width: 38px; height: 38px; border-radius: 12px; border: none;
+      background: var(--cafe); color: #fff; font-size: 1.4rem; line-height: 1;
+    }
+    @media (prefers-color-scheme: dark) { .btn-add { color: #1b120c; } }
+    .btn-add:active { transform: scale(.92); }
+    mark { background: #ffd978; color: #2b1d14; border-radius: 3px; padding: 0 1px; }
+    .vazio { text-align: center; padding: 40px 0; color: var(--suave); }
+
+    /* ===== BOTÕES ===== */
+    .btn {
+      border: none; border-radius: 14px; padding: 13px 18px; font-size: 1rem; font-weight: 600;
+      background: var(--cafe); color: #fff;
+    }
+    @media (prefers-color-scheme: dark) { .btn { color: #1b120c; } }
+    .btn.sec { background: transparent; color: var(--cafe); border: 1px solid var(--cafe); }
+    .btn.perigo { background: #d64545; color: #fff; }
+    .btn.bloco { width: 100%; margin-top: 10px; }
+
+    /* ===== PEDIDO ===== */
+    .pedido-layout { display: grid; gap: 16px; }
+    .item-pedido {
+      background: var(--card); border: 1px solid var(--borda); border-radius: 16px;
+      padding: 12px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .item-pedido .mini { width: 54px; height: 54px; border-radius: 14px; display: grid; place-items: center; font-size: 1.7rem; flex: none; }
+    .item-pedido .dados { flex: 1; min-width: 0; }
+    .item-pedido strong { display: block; }
+    .qtd { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+    .qtd button {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid var(--cafe); background: transparent; color: var(--cafe); font-size: 1.1rem;
+    }
+    .resumo {
+      background: var(--card); border: 1px solid var(--borda); border-radius: 18px;
+      padding: 18px; box-shadow: var(--sombra); height: fit-content;
+    }
+    .resumo .total { display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: 800; }
+
+    /* ===== GALERIA ===== */
+    .topo-galeria { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+    .galeria { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
+    .foto {
+      position: relative; aspect-ratio: 1; border-radius: 16px; overflow: hidden;
+      background: var(--card); border: 1px solid var(--borda); padding: 0; display: block;
+    }
+    .foto .abrir { width: 100%; height: 100%; border: 0; padding: 0; background: none; display: block; }
+    .foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .foto .del {
+      position: absolute; top: 6px; right: 6px; width: 34px; height: 34px; border-radius: 50%;
+      border: none; background: rgba(0, 0, 0, .6); color: #fff; font-size: 1rem;
+    }
+
+    /* ===== CÂMERA / VISUALIZADOR (dialog) ===== */
+    dialog {
+      border: none; border-radius: 20px; padding: 0; background: #000; color: #fff;
+      width: min(94vw, 640px); max-height: 94vh; overflow: hidden;
+    }
+    dialog::backdrop { background: rgba(0, 0, 0, .75); }
+    dialog video, dialog .grande { width: 100%; max-height: 66vh; object-fit: contain; display: block; background: #000; }
+    .controles { display: flex; gap: 10px; justify-content: center; align-items: center; padding: 14px; background: #111; }
+    .controles button {
+      border: none; border-radius: 14px; padding: 12px 16px; font-size: .95rem; background: #333; color: #fff;
+    }
+    .controles .disparo {
+      width: 66px; height: 66px; border-radius: 50%; background: #fff; border: 5px solid #bbb; padding: 0;
+    }
+    .controles .disparo:active { transform: scale(.92); }
+
+    #toast {
+      position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom));
+      transform: translateX(-50%); background: var(--cafe-escuro); color: #fff;
+      padding: 11px 20px; border-radius: 22px; font-size: .9rem; opacity: 0; pointer-events: none;
+      transition: opacity .25s; z-index: 50; max-width: 90vw; text-align: center;
+    }
+    #toast.visivel { opacity: 1; }
+    [hidden] { display: none !important; }
+
+    /* ===== TABLET / PC ===== */
+    @media (min-width: 640px) {
+      .grade { grid-template-columns: repeat(3, 1fr); }
+      .galeria { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (min-width: 900px) {
+      body { padding-bottom: 24px; }
+      nav {
+        position: static; background: none; border: none; padding: 0; gap: 4px; flex: none;
+      }
+      nav button { flex-direction: row; gap: 8px; padding: 10px 18px; font-size: .95rem; border-radius: 12px; }
+      nav button.ativo { background: color-mix(in srgb, var(--cafe) 14%, transparent); }
+      #badge { position: static; margin-left: 2px; }
+      .grade { grid-template-columns: repeat(4, 1fr); }
+      .galeria { grid-template-columns: repeat(4, 1fr); }
+      .pedido-layout { grid-template-columns: 1fr 340px; align-items: start; }
+      .resumo { position: sticky; top: 90px; }
+      #toast { bottom: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="topo">
+    <div class="logo"><span>☕</span> Café Mobile</div>
+    <nav>
+      <button id="nav-cardapio" class="ativo"><span class="ico">🍽️</span>Cardápio</button>
+      <button id="nav-pedido"><span class="ico">🛒<b id="badge" hidden>0</b></span>Pedido</button>
+      <button id="nav-galeria"><span class="ico">📷</span>Galeria</button>
+    </nav>
+  </div>
+  <div class="area-busca" id="area-busca">
+    <input type="search" id="busca" placeholder="Buscar no cardápio..." autocomplete="off">
+  </div>
+</header>
+
+<main>
+  <!-- ===== CARDÁPIO ===== -->
+  <section id="tela-cardapio" class="tela ativa">
+    <h2>Cardápio</h2>
+    <p class="sub" id="contador"></p>
+    <div class="chips" id="chips"></div>
+    <div class="grade" id="grade"></div>
+    <p class="vazio" id="vazio" hidden>Nenhum produto encontrado 😕</p>
+  </section>
+
+  <!-- ===== PEDIDO ===== -->
+  <section id="tela-pedido" class="tela">
+    <h2>Seu pedido</h2>
+    <p class="sub">Revise os itens e compartilhe com a cafeteria.</p>
+    <p class="vazio" id="pedido-vazio">Seu pedido está vazio. Volte ao cardápio e adicione algo gostoso ☕</p>
+    <div class="pedido-layout" id="pedido-layout" hidden>
+      <div id="itens-pedido"></div>
+      <aside class="resumo">
+        <div class="total"><span>Total</span><span id="total"></span></div>
+        <button class="btn bloco" id="btn-compartilhar">Compartilhar pedido</button>
+        <button class="btn sec bloco" id="btn-limpar">Limpar pedido</button>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ===== GALERIA ===== -->
+  <section id="tela-galeria" class="tela">
+    <div class="topo-galeria">
+      <div>
+        <h2>Galeria</h2>
+        <p class="sub">Registre seus momentos no café.</p>
+      </div>
+      <button class="btn" id="btn-camera">📷 Tirar foto</button>
+    </div>
+    <p class="vazio" id="galeria-vazia">Nenhuma foto ainda. Toque em “Tirar foto”.</p>
+    <div class="galeria" id="galeria"></div>
+  </section>
+</main>
+
+<!-- Câmera -->
+<dialog id="dlg-camera">
+  <video id="video" autoplay playsinline muted></video>
+  <div class="controles">
+    <button id="btn-virar">🔄 Virar</button>
+    <button class="disparo" id="btn-disparar" aria-label="Capturar foto"></button>
+    <button id="btn-fechar-camera">Fechar</button>
+  </div>
+</dialog>
+
+<!-- Visualizador de foto -->
+<dialog id="dlg-foto">
+  <img class="grande" id="foto-grande" alt="Foto da galeria">
+  <div class="controles">
+    <button id="btn-fechar-foto">Fechar</button>
+    <button id="btn-apagar-grande" style="background:#d64545">🗑️ Apagar</button>
+  </div>
+</dialog>
+
+<!-- Alternativa quando a câmera ao vivo não está disponível (ex.: arquivo aberto sem HTTPS) -->
+<input type="file" id="input-foto" accept="image/*" capture="environment" hidden>
+<canvas id="canvas" hidden></canvas>
+<div id="toast"></div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const dinheiro = v => "R$ " + v.toFixed(2).replace(".", ",");
+
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("visivel");
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => t.classList.remove("visivel"), Math.max(1800, msg.length * 60));
+  }
+  function lerStorage(chave) {
+    try { return JSON.parse(localStorage.getItem(chave)) || []; } catch (e) { return []; }
+  }
+
+  // ===== DADOS DO CARDÁPIO =====
+  const categorias = ["Todos", "Cafés", "Gelados", "Salgados", "Doces"];
+  const produtos = [
+    { id: 1,  cat: "Cafés",    nome: "Espresso",        desc: "Curto, intenso e encorpado",            preco: 6.0,  emoji: "☕", cor: ["#6f4e37", "#a67c52"], tag: "Clássico" },
+    { id: 2,  cat: "Cafés",    nome: "Cappuccino",      desc: "Espresso, leite vaporizado e espuma",   preco: 10.0, emoji: "☕", cor: ["#b07d56", "#e6c19c"], tag: "Mais pedido" },
+    { id: 3,  cat: "Cafés",    nome: "Café com Leite",  desc: "Coado na hora com leite quentinho",     preco: 7.5,  emoji: "🥛", cor: ["#c9a47e", "#f0dcc3"] },
+    { id: 4,  cat: "Cafés",    nome: "Mocaccino",       desc: "Espresso, chocolate e chantilly",       preco: 12.0, emoji: "🍫", cor: ["#5a3a2a", "#9a6a4d"] },
+    { id: 5,  cat: "Cafés",    nome: "Latte de Baunilha", desc: "Suave, cremoso e levemente doce",     preco: 12.5, emoji: "🍦", cor: ["#d9b98c", "#f6e6c9"], tag: "Novo" },
+    { id: 6,  cat: "Gelados",  nome: "Cold Brew",       desc: "Extraído a frio por 18 horas",          preco: 13.0, emoji: "🧊", cor: ["#2f4858", "#5b8a9e"], tag: "Novo" },
+    { id: 7,  cat: "Gelados",  nome: "Frappé de Caramelo", desc: "Gelado, cremoso e com calda",        preco: 15.0, emoji: "🥤", cor: ["#c27c3a", "#f1c27d"] },
+    { id: 8,  cat: "Gelados",  nome: "Suco de Laranja", desc: "Natural, 300 ml",                       preco: 8.5,  emoji: "🍊", cor: ["#f08a24", "#ffc371"] },
+    { id: 9,  cat: "Salgados", nome: "Pão de Queijo",   desc: "Porção com 4 unidades, quentinhos",     preco: 8.0,  emoji: "🧀", cor: ["#e0a030", "#f7d57a"], tag: "Mais pedido" },
+    { id: 10, cat: "Salgados", nome: "Croissant de Presunto", desc: "Folhado com presunto e queijo",   preco: 12.0, emoji: "🥐", cor: ["#c98a3f", "#efc27a"] },
+    { id: 11, cat: "Salgados", nome: "Sanduíche Natural", desc: "Frango, cenoura e maionese leve",     preco: 14.0, emoji: "🥪", cor: ["#6b8e4e", "#b5cf8f"] },
+    { id: 12, cat: "Salgados", nome: "Torrada com Ovos", desc: "Pão rústico, ovos mexidos e ervas",    preco: 16.0, emoji: "🍳", cor: ["#d9a441", "#fbe29a"] },
+    { id: 13, cat: "Doces",    nome: "Bolo de Cenoura", desc: "Fatia com cobertura de chocolate",      preco: 11.0, emoji: "🥕", cor: ["#d2691e", "#f4a460"] },
+    { id: 14, cat: "Doces",    nome: "Cheesecake",      desc: "Calda de frutas vermelhas",             preco: 15.0, emoji: "🍰", cor: ["#b5445e", "#f0a3b5"], tag: "Novo" },
+    { id: 15, cat: "Doces",    nome: "Brownie",         desc: "Chocolate meio amargo e nozes",         preco: 9.5,  emoji: "🍫", cor: ["#3e2418", "#7a4a33"] },
+    { id: 16, cat: "Doces",    nome: "Cookie",          desc: "Com gotas de chocolate belga",          preco: 7.0,  emoji: "🍪", cor: ["#a8743c", "#e0b274"] }
+  ];
+  const grad = p => `linear-gradient(135deg, ${p.cor[0]}, ${p.cor[1]})`;
+
+  let categoriaAtual = "Todos";
+  let pedido = lerStorage("pedido");   // [{ id, qtd }]
+  let fotos  = lerStorage("fotos");    // [{ id, data }]
+
+  // ===== BUSCA + CATEGORIAS =====
+  function normalizar(t) {
+    return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+  function destacar(nome, busca) {
+    if (!busca) return nome;
+    const pos = normalizar(nome).indexOf(normalizar(busca));
+    if (pos === -1) return nome;
+    const fim = pos + busca.length;
+    return nome.slice(0, pos) + "<mark>" + nome.slice(pos, fim) + "</mark>" + nome.slice(fim);
+  }
+
+  function renderChips() {
+    $("chips").innerHTML = categorias.map(c =>
+      `<button class="chip ${c === categoriaAtual ? "ativo" : ""}" data-cat="${c}">${c}</button>`
+    ).join("");
+  }
+
+  function renderCardapio() {
+    const busca = $("busca").value.trim();
+    const lista = produtos.filter(p =>
+      (categoriaAtual === "Todos" || p.cat === categoriaAtual) &&
+      normalizar(p.nome).includes(normalizar(busca))
+    );
+    $("grade").innerHTML = lista.map(p => `
+      <article class="produto">
+        <div class="img" style="background:${grad(p)}">
+          ${p.tag ? `<span class="tag">${p.tag}</span>` : ""}
+          <span>${p.emoji}</span>
+        </div>
+        <div class="info">
+          <h3>${destacar(p.nome, busca)}</h3>
+          <p>${p.desc}</p>
+          <div class="rodape">
+            <span class="preco">${dinheiro(p.preco)}</span>
+            <button class="btn-add" data-add="${p.id}" aria-label="Adicionar ${p.nome}">+</button>
+          </div>
+        </div>
+      </article>`).join("");
+    $("vazio").hidden = lista.length > 0;
+    $("contador").textContent = lista.length + (lista.length === 1 ? " item" : " itens") +
+      (categoriaAtual !== "Todos" ? " em " + categoriaAtual : "");
+  }
+
+  $("busca").addEventListener("input", renderCardapio);
+  $("chips").addEventListener("click", e => {
+    const cat = e.target.dataset.cat;
+    if (!cat) return;
+    categoriaAtual = cat;
+    renderChips();
+    renderCardapio();
+  });
+
+  // ===== PEDIDO =====
+  function salvarPedido() {
+    try { localStorage.setItem("pedido", JSON.stringify(pedido)); } catch (e) {}
+  }
+  const totalPedido = () => pedido.reduce((s, i) => s + produtos.find(p => p.id === i.id).preco * i.qtd, 0);
+
+  function atualizarBadge() {
+    const qtd = pedido.reduce((s, i) => s + i.qtd, 0);
+    $("badge").textContent = qtd;
+    $("badge").hidden = qtd === 0;
+  }
+
+  $("grade").addEventListener("click", e => {
+    const botao = e.target.closest("[data-add]");
+    if (!botao) return;
+    const id = Number(botao.dataset.add);
+    const item = pedido.find(i => i.id === id);
+    if (item) item.qtd++; else pedido.push({ id, qtd: 1 });
+    salvarPedido();
+    atualizarBadge();
+    toast("Adicionado ao pedido ✓");
+  });
+
+  function renderPedido() {
+    const vazio = pedido.length === 0;
+    $("pedido-vazio").hidden = !vazio;
+    $("pedido-layout").hidden = vazio;
+    $("itens-pedido").innerHTML = pedido.map(i => {
+      const p = produtos.find(x => x.id === i.id);
+      return `
+        <div class="item-pedido">
+          <div class="mini" style="background:${grad(p)}">${p.emoji}</div>
+          <div class="dados">
+            <strong>${p.nome}</strong>
+            <span class="preco">${dinheiro(p.preco * i.qtd)}</span>
+            <div class="qtd">
+              <button data-menos="${i.id}" aria-label="Diminuir">−</button>
+              <span>${i.qtd}</span>
+              <button data-mais="${i.id}" aria-label="Aumentar">+</button>
+            </div>
+          </div>
+        </div>`;
+    }).join("");
+    $("total").textContent = dinheiro(totalPedido());
+  }
+
+  $("itens-pedido").addEventListener("click", e => {
+    const mais = Number(e.target.dataset.mais);
+    const menos = Number(e.target.dataset.menos);
+    if (mais) pedido.find(i => i.id === mais).qtd++;
+    if (menos) {
+      const item = pedido.find(i => i.id === menos);
+      item.qtd--;
+      if (item.qtd <= 0) pedido = pedido.filter(i => i.id !== menos);
+    }
+    if (mais || menos) { salvarPedido(); atualizarBadge(); renderPedido(); }
+  });
+
+  $("btn-limpar").addEventListener("click", () => {
+    if (!confirm("Limpar todo o pedido?")) return;
+    pedido = [];
+    salvarPedido(); atualizarBadge(); renderPedido();
+  });
+
+  $("btn-compartilhar").addEventListener("click", async () => {
+    const linhas = pedido.map(i => {
+      const p = produtos.find(x => x.id === i.id);
+      return `${i.qtd}x ${p.nome} - ${dinheiro(p.preco * i.qtd)}`;
+    });
+    const texto = "☕ Pedido Café Mobile\n" + linhas.join("\n") + "\nTotal: " + dinheiro(totalPedido());
+    if (navigator.share) {
+      try { await navigator.share({ title: "Meu pedido", text: texto }); } catch (e) {}
+    } else {
+      window.open("https://wa.me/?text=" + encodeURIComponent(texto), "_blank");
+    }
+  });
+
+  // ===== GALERIA =====
+  function salvarFotos() {
+    try { localStorage.setItem("fotos", JSON.stringify(fotos)); return true; }
+    catch (e) { toast("Sem espaço para salvar a foto. Apague algumas."); return false; }
+  }
+
+  function renderGaleria() {
+    $("galeria-vazia").hidden = fotos.length > 0;
+    $("galeria").innerHTML = fotos.map(f => `
+      <div class="foto">
+        <button class="abrir" data-ver="${f.id}" aria-label="Abrir foto">
+          <img src="${f.data}" alt="Foto tirada no café" loading="lazy">
+        </button>
+        <button class="del" data-del="${f.id}" aria-label="Apagar foto">🗑️</button>
+      </div>`).join("");
+  }
+
+  function apagarFoto(id) {
+    if (!confirm("Apagar esta foto?")) return false;
+    fotos = fotos.filter(f => f.id !== id);
+    salvarFotos();
+    renderGaleria();
+    return true;
+  }
+
+  let fotoAberta = null;
+  $("galeria").addEventListener("click", e => {
+    const del = e.target.closest("[data-del]");
+    const ver = e.target.closest("[data-ver]");
+    if (del) apagarFoto(Number(del.dataset.del));
+    else if (ver) {
+      const f = fotos.find(x => x.id === Number(ver.dataset.ver));
+      if (!f) return;
+      fotoAberta = f.id;
+      $("foto-grande").src = f.data;
+      $("dlg-foto").showModal();
+    }
+  });
+  $("btn-fechar-foto").addEventListener("click", () => $("dlg-foto").close());
+  $("btn-apagar-grande").addEventListener("click", () => {
+    if (apagarFoto(fotoAberta)) $("dlg-foto").close();
+  });
+
+  // Reduz a imagem (largura máx. 900px) para caber no localStorage
+  function guardarImagem(origem, largura, altura) {
+    const max = 900;
+    const escala = Math.min(1, max / largura);
+    const canvas = $("canvas");
+    canvas.width = Math.round(largura * escala);
+    canvas.height = Math.round(altura * escala);
+    canvas.getContext("2d").drawImage(origem, 0, 0, canvas.width, canvas.height);
+    fotos.unshift({ id: Date.now(), data: canvas.toDataURL("image/jpeg", 0.75) });
+    if (salvarFotos()) { renderGaleria(); toast("Foto salva na galeria 📷"); }
+    else fotos.shift();
+  }
+
+  // --- Câmera ao vivo (getUserMedia: exige HTTPS ou localhost) ---
+  let stream = null;
+  let facing = "environment";
+
+  // Pede permissão e abre a câmera. No celular usa a câmera escolhida (traseira/frontal);
+  // no PC, onde só existe a webcam, tenta de novo sem exigir o tipo de câmera.
+  async function abrirStream() {
+    pararStream();
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: facing, width: { ideal: 1280 } }, audio: false
+      });
+    } catch (erro) {
+      if (erro.name === "NotAllowedError" || erro.name === "SecurityError") throw erro;
+      stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    }
+    const v = $("video");
+    v.srcObject = stream;
+    try { await v.play(); } catch (e) {}
+  }
+
+  // Explica o motivo do erro de forma que o usuário saiba o que fazer
+  function mensagemErroCamera(erro) {
+    switch (erro && erro.name) {
+      case "NotAllowedError":
+      case "SecurityError":
+        return "Permissão da câmera negada. Toque no cadeado ao lado do endereço do site, libere a Câmera e tente de novo.";
+      case "NotFoundError":
+      case "OverconstrainedError":
+        return "Nenhuma câmera encontrada neste aparelho.";
+      case "NotReadableError":
+      case "AbortError":
+        return "A câmera está em uso por outro app. Feche-o e tente de novo.";
+      default:
+        return "Não foi possível abrir a câmera.";
+    }
+  }
+  function pararStream() {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
+
+  $("btn-camera").addEventListener("click", async () => {
+    // Sem HTTPS (ou arquivo aberto direto), o navegador bloqueia a câmera ao vivo
+    if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast("Câmera ao vivo exige HTTPS. Abrindo a câmera do aparelho...");
+      setTimeout(() => $("input-foto").click(), 900);
+      return;
+    }
+    try {
+      await abrirStream();          // aqui o navegador mostra o pedido de permissão
+      $("dlg-camera").showModal();
+    } catch (erro) {
+      toast(mensagemErroCamera(erro));
+      // Se foi só falta de câmera ao vivo, ainda dá para tirar foto pelo seletor
+      if (erro.name !== "NotAllowedError" && erro.name !== "SecurityError") {
+        setTimeout(() => $("input-foto").click(), 1800);
+      }
+    }
+  });
+
+  $("btn-virar").addEventListener("click", async () => {
+    facing = facing === "environment" ? "user" : "environment";
+    try { await abrirStream(); } catch (e) { toast(mensagemErroCamera(e)); }
+  });
+
+  $("btn-disparar").addEventListener("click", () => {
+    const v = $("video");
+    if (!v.videoWidth) return;
+    guardarImagem(v, v.videoWidth, v.videoHeight);
+    $("dlg-camera").close();
+  });
+  $("btn-fechar-camera").addEventListener("click", () => $("dlg-camera").close());
+  $("dlg-camera").addEventListener("close", pararStream);
+
+  // --- Alternativa: input de arquivo/câmera ---
+  $("input-foto").addEventListener("change", e => {
+    const arquivo = e.target.files[0];
+    if (!arquivo) return;
+    const img = new Image();
+    img.onload = () => { guardarImagem(img, img.naturalWidth, img.naturalHeight); URL.revokeObjectURL(img.src); };
+    img.src = URL.createObjectURL(arquivo);
+    e.target.value = "";
+  });
+
+  // ===== NAVEGAÇÃO =====
+  function irPara(tela) {
+    ["cardapio", "pedido", "galeria"].forEach(t => {
+      $("tela-" + t).classList.toggle("ativa", t === tela);
+      $("nav-" + t).classList.toggle("ativo", t === tela);
+    });
+    $("area-busca").hidden = tela !== "cardapio";
+    if (tela === "pedido") renderPedido();
+    if (tela === "galeria") renderGaleria();
+    window.scrollTo({ top: 0 });
+  }
+  ["cardapio", "pedido", "galeria"].forEach(t => $("nav-" + t).addEventListener("click", () => irPara(t)));
+
+  // ===== INÍCIO =====
+  renderChips();
+  renderCardapio();
+  renderGaleria();
+  atualizarBadge();
+</script>
+
+</body>
+</html>
